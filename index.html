@@ -1,0 +1,87 @@
+ <link rel="stylesheet" href="runtime/pyscript.css" />
+    <script defer src="runtime/pyscript.js"></script>
+ <div id="mpl"></div>
+            <py-config>
+            packages = [
+              "matplotlib",
+            ]
+            </py-config>
+
+            <py-script>
+from pyodide.http import pyfetch
+import matplotlib.pyplot as plt
+import asyncio
+import json
+
+
+
+# --- functions ---
+
+# return average probability
+def get_average_probability(response_data):
+    sentences = response_data['documents'][0]['sentences']
+    sentence_probs = [sentence['generated_prob'] for sentence in sentences]
+    average_prob = sum(sentence_probs) / len(sentence_probs)
+    return average_prob
+
+# plot
+def plot_probability(response_data, average_prob):
+    complete_prob = response_data["documents"][0]["completely_generated_prob"]
+    sentences = response_data['documents'][0]['sentences']
+    sentence_probs = [sentence['generated_prob'] for sentence in sentences]
+    average_prob = get_average_probability(response_data)
+
+    #plot
+    plt.clf()
+    plt.plot(sentence_probs, '-o', label='Sentence Probabilities')
+    plt.axhline(average_prob, color='red', linestyle='-', label='Average Probability')
+    plt.axhline(complete_prob, color='orange', linestyle='-', label='Total Probability')
+    plt.xlabel('Sentence Number')
+    plt.ylabel('Generated Probability')
+    plt.title('Average Generated Probability per Sentence')
+    plt.legend()
+    
+     # add textbox
+    text = f"{round(complete_prob * 100, 2)}% chance AI generated"
+    plt.text(0, 0, text, fontsize=14, transform=plt.gcf().transFigure)
+    display(plt, target="mpl")
+
+# --- main ---
+def main1(response_data):
+  average_prob = get_average_probability(response_data)
+  complete_prob = response_data["documents"][0]["completely_generated_prob"]
+  #print(f"{round(complete_prob * 100, 2)}% chance AI generated")
+  plot_probability(response_data, average_prob)
+
+
+# -----------------------------
+# INSERT TEXT BELOW
+
+
+async def do_api_post():
+    async def this():
+      text = Element("post_api_text").value
+      payload = json.dumps({"document": text}).encode()
+      headers = {"Content-Type": "application/json"}
+      response = await pyfetch("https://api.gptzero.me/v2/predict/text", method="POST", body=payload, headers=headers)
+      output = await response.json()
+      main1(output)
+    asyncio.ensure_future(this())
+
+
+
+def handle_post_input():
+  loop = asyncio.get_event_loop()
+  loop.run_until_complete(do_api_post())
+
+
+              
+              
+# This will send a POST request to the endpoint https://api.gptzero.me/v2/predict/text with a JSON payload containing the key-value pair {"document": "Enter your text here"} and the header Content-Type: application/json. If the request is successful (status code 200), the response JSON will be printed, otherwise, the status code of the failed request will be printed.
+</py-script>
+<div id="mpl"></div>
+
+
+<label for="post_title">Enter text to analyze:</label><br>
+<input type="text" id="post_api_text" name="post_api_text"><br>
+<button py-click="handle_post_input()" id="new_post" class="py-button">Analyze text!</button>
