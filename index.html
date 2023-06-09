@@ -101,7 +101,7 @@ Array.from(document.querySelectorAll('#enter-site-btn')).forEach(function(el2) {
                 text = js.document.getElementById("post_api_text_sizeable").innerHTML
               js.document.getElementById("post_api_text_sizeable").innerHTML = text
               payload = json.dumps({"document": text}).encode()
-              headers = {"accept": "application/json", "Content-Type": "application/json", "X-Api-Key": "f70ab243b3be407ea9c4b36042fce1ee"}
+              headers = {"accept": "application/json", "Content-Type": "application/json", "X-Api-Key": "ENTER_KEY_HERE"}    # $API_KEY INPUT
               response = await pyfetch("https://api.gptzero.me/v2/predict/text", method="POST", body=payload, headers=headers)
               output = await response.json()
               #print(output) <-- Testing purposes: Displays json output
