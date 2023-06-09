@@ -1,87 +1,154 @@
  <link rel="stylesheet" href="runtime/pyscript.css" />
     <script defer src="runtime/pyscript.js"></script>
- <div id="mpl"></div>
-            <py-config>
-            packages = [
-              "matplotlib",
-            ]
-            </py-config>
+<head>
+  <title>ScholarGPT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="welcome-message">
+  <h2>Welcome to ScholarGPT!</h2>
+  <button id="enter-site-btn">Enter Site</button>
+</div>
+<script>
+  const welcomeMessage = document.getElementById("welcome-message");
+  const enterSiteBtn = document.getElementById("enter-site-btn");
+  const container = document.getElementsByClassName("container blur");
+  const blurClass = "blur";
+  const hiddenClass = "hide";
 
-            <py-script>
-from pyodide.http import pyfetch
-import matplotlib.pyplot as plt
-import asyncio
-import json
-
-
-
-# --- functions ---
-
-# return average probability
-def get_average_probability(response_data):
-    sentences = response_data['documents'][0]['sentences']
-    sentence_probs = [sentence['generated_prob'] for sentence in sentences]
-    average_prob = sum(sentence_probs) / len(sentence_probs)
-    return average_prob
-
-# plot
-def plot_probability(response_data, average_prob):
-    complete_prob = response_data["documents"][0]["completely_generated_prob"]
-    sentences = response_data['documents'][0]['sentences']
-    sentence_probs = [sentence['generated_prob'] for sentence in sentences]
-    average_prob = get_average_probability(response_data)
-
-    #plot
-    plt.clf()
-    plt.plot(sentence_probs, '-o', label='Sentence Probabilities')
-    plt.axhline(average_prob, color='red', linestyle='-', label='Average Probability')
-    plt.axhline(complete_prob, color='orange', linestyle='-', label='Total Probability')
-    plt.xlabel('Sentence Number')
-    plt.ylabel('Generated Probability')
-    plt.title('Average Generated Probability per Sentence')
-    plt.legend()
+  enterSiteBtn.addEventListener("click", () => {
+Array.from(document.querySelectorAll('#welcome-message')).forEach(function(el1) { el1.classList.add('hide'); });
     
-     # add textbox
-    text = f"{round(complete_prob * 100, 2)}% chance AI generated"
-    plt.text(0, 0, text, fontsize=14, transform=plt.gcf().transFigure)
-    display(plt, target="mpl")
+Array.from(document.querySelectorAll('#enter-site-btn')).forEach(function(el2) { el2.classList.add('hide'); });    
+    Array.from(document.querySelectorAll('.container.blur')).forEach(function(el3) { el3.classList.remove('blur'); });
+  });
+</script>
+    <div class="container blur">
+      <div class="image-container">
+  <img src="https://cdnsm5-ss3.sharpschool.com/UserFiles/Servers/Server_4204286/Image/western.png" alt="Image 1">
+</div>
 
-# --- main ---
-def main1(response_data):
-  average_prob = get_average_probability(response_data)
-  complete_prob = response_data["documents"][0]["completely_generated_prob"]
-  #print(f"{round(complete_prob * 100, 2)}% chance AI generated")
-  plot_probability(response_data, average_prob)
+      <h1 class="title">ScholarGPT Web V1.0</h1>
+      <h4 class="subtitle">Created by: Luc Cohen, Hasan Maharoof, Krish Patel, Tolib Sanni</h4>
+
+      <div id="mpl"></div>
+      <py-config>
+        packages = [
+          "matplotlib",
+        ]
+      </py-config>
+
+      <py-script>
+        #Import modules
+        from pyodide.http import pyfetch
+        import matplotlib.pyplot as plt
+        import asyncio
+        import json
+
+        doTest = False
+
+        # --- functions ---
+
+        #return average probability
+        def get_average_probability(response_data):
+            sentences = response_data['documents'][0]['sentences']
+            sentence_probs = [sentence['generated_prob'] for sentence in sentences]
+            average_prob = sum(sentence_probs) / len(sentence_probs)
+            return average_prob
+
+        #plot
+        def plot_probability(response_data, average_prob):
+            complete_prob = response_data["documents"][0]["completely_generated_prob"]
+            sentences = response_data['documents'][0]['sentences']
+            sentence_probs = [sentence['generated_prob'] for sentence in sentences]
+            average_prob = get_average_probability(response_data)
+
+            #plot
+            plt.clf()
+            plt.plot(sentence_probs, '-o', label='Sentence Probabilities')
+            plt.axhline(average_prob, color='red', linestyle='-', label='Average Probability')
+            plt.axhline(complete_prob, color='orange', linestyle='-', label='Total Probability')
+            plt.xlabel('Sentence Number')
+            plt.ylabel('Generated Probability')
+            plt.title('Average Generated Probability per Sentence')
+            plt.legend()
+
+            #add textbox
+            text = f"{round(complete_prob * 100, 2)}% chance AI generated"
+            plt.text(0, 0, text, fontsize=14, transform=plt.gcf().transFigure)
+            display(plt, target="mpl")
+
+        # --- main functions ---
+
+        #This function calls the get_average_probability function to get the average probability of the text and plots the probabilities using the plot_probability function.
+        def process_request_output(response_data):
+          average_prob = get_average_probability(response_data)
+          complete_prob = response_data["documents"][0]["completely_generated_prob"]
+          #print(f"{round(complete_prob * 100, 2)}% chance AI generated")
+          plot_probability(response_data, average_prob)
 
 
-# -----------------------------
-# INSERT TEXT BELOW
+        #Asynchronous function. Compiles text content from 'post_api_text' element, sends post request to API endpoint, receives json output, passes to process_request_output function for processing.
+        async def do_api_post():
+            async def post_package():
+              global doTest
+              js.document.getElementById("mpl").innerHTML = "";
+              if doTest == "AI":
+                text = "Manta rays are a type of marine animal that belongs to the Mobulidae family. They are known for their large size, which can reach up to 23 feet in wingspan. Manta rays inhabit warm and tropical waters, and their diet consists of plankton and small fish. They have flat, diamond-shaped bodies that are covered in unique patterns of spots and markings. These peaceful creatures are generally harmless to humans, despite their massive size. Unfortunately, human activities such as overfishing and accidental entanglement in fishing nets pose a significant threat to manta ray populations worldwide."
+              elif doTest == "Hum":
+                text = "On January 25, 2022, College Board announced that the SAT will be delivered digitally in an attempt to change the format of test itself. Vice President of the College Readiness Assessment at College Board, Priscilla Rodriguez, states “ The digital SAT will be easier to take, easier to give and more relevant”.[23] Some new features of this digital version of the SAT include: a 2 hours testing period instead of the 3 hours period that has been used for the current SAT, more relevant topics that cover material that is given in college courses, and calculators will be allowed the entirety of the Math portion of the exam. Digital versions of the exam gives College Board the opportunity to address inequities that are associated with student accessibility to technology by providing students who don’t have computers on testing days.[24]This new change was brought forth by College Board following disruptions in testing that were COVID related. The 2021 SAT Suite of Assessment Program results showed that 1.5 million high school students took compared to the 2.2 million students in 2020 who participated taking this test.[25]"
+              else:
+                text = js.document.getElementById("post_api_text_sizeable").innerHTML
+              js.document.getElementById("post_api_text_sizeable").innerHTML = text
+              payload = json.dumps({"document": text}).encode()
+              headers = {"accept": "application/json", "Content-Type": "application/json", "X-Api-Key": "f70ab243b3be407ea9c4b36042fce1ee"}
+              response = await pyfetch("https://api.gptzero.me/v2/predict/text", method="POST", body=payload, headers=headers)
+              output = await response.json()
+              #print(output) <-- Testing purposes: Displays json output
+              process_request_output(output)
+            asyncio.ensure_future(post_package())
 
 
-async def do_api_post():
-    async def this():
-      text = Element("post_api_text").value
-      payload = json.dumps({"document": text}).encode()
-      headers = {"Content-Type": "application/json"}
-      response = await pyfetch("https://api.gptzero.me/v2/predict/text", method="POST", body=payload, headers=headers)
-      output = await response.json()
-      main1(output)
-    asyncio.ensure_future(this())
+        #Creates an event loop and calls the do_api_post function, which sends the API request. Top level.
+        def handle_post_input():
+          global doTest
+          doTest = False
+          loop = asyncio.get_event_loop()
+          loop.run_until_complete(do_api_post())
 
+        def handle_post_input_AI():
+          global doTest
+          doTest = "AI"
+          loop = asyncio.get_event_loop()
+          loop.run_until_complete(do_api_post())
 
-
-def handle_post_input():
-  loop = asyncio.get_event_loop()
-  loop.run_until_complete(do_api_post())
-
-
-              
-              
-# This will send a POST request to the endpoint https://api.gptzero.me/v2/predict/text with a JSON payload containing the key-value pair {"document": "Enter your text here"} and the header Content-Type: application/json. If the request is successful (status code 200), the response JSON will be printed, otherwise, the status code of the failed request will be printed.
+        def handle_post_input_Hum():
+          global doTest
+          doTest = "Hum"
+          loop = asyncio.get_event_loop()
+          loop.run_until_complete(do_api_post())
 </py-script>
-<div id="mpl"></div>
-
 
 <label for="post_title">Enter text to analyze:</label><br>
-<input type="text" id="post_api_text" name="post_api_text"><br>
+<span 
+  class="input" 
+  role="textbox" 
+  id="post_api_text_sizeable"
+  class="post_api_text_sizeable"
+  contenteditable>
+</span>
+<!--
+<input type="text" id="post_api_text" name="post_api_text">
+-->
 <button py-click="handle_post_input()" id="new_post" class="py-button">Analyze text!</button>
+<button py-click="handle_post_input_AI()" id="ai_text" class="py-button">Test AI Text</button>
+<button py-click="handle_post_input_Hum()" id="hum_text" class="py-button">Test Human Text</button>
+<br>
+<br>
+<button class="about-btn">About</button>
+<div class="about-description">
+  <p>Copyright 2023, Wolverine Hack Club - ScholarGPT is part of a student created initiative at Western School of Technology. ScholarGPT is intended to be a tool for teachers, allowing them to check the probability that student submitted work was created by an AI tool. Use the analyze tool to submit your own text, or test the model using the test buttons. Email luccohen6@gmail.com for questions.</p>
+</div>
+
+    </div>
+</body>
